@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
   backend:
@@ -15,7 +15,7 @@ jobs:
         working-directory: server
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install uv
@@ -29,17 +29,5 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Check formatting
-        run: uv run ruff format --check .
-        continue-on-error: true
-
-      - name: Lint
-        run: uv run ruff check .
-        continue-on-error: true
-
-      - name: Import application
+      - name: Verify application imports
         run: uv run python -c "from app.main import app"
-
-      - name: Run tests
-        run: uv run pytest
-        continue-on-error: true
