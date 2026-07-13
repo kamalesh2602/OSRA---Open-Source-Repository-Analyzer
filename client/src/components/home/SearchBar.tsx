@@ -1,12 +1,21 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { analyzeRepository } from "../../services/api";
 
-export default function SearchBar() {
+interface SearchBarProps {
+  setRepository: (repo: any) => void;
+}
+
+export default function SearchBar({ setRepository }: SearchBarProps) {
   const [url, setUrl] = useState("");
 
-  function handleAnalyze() {
-    console.log(url);
-  }
+  const handleAnalyze = async () => {
+    try {
+      const data = await analyzeRepository(url);
+      setRepository(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="mx-auto flex max-w-3xl gap-4">
@@ -16,14 +25,13 @@ export default function SearchBar() {
         placeholder="https://github.com/facebook/react"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 outline-none backdrop-blur-xl transition focus:border-blue-500"
+        className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-white outline-none"
       />
 
       <button
         onClick={handleAnalyze}
-        className="flex items-center gap-2 rounded-2xl bg-blue-600 px-8 py-4 font-semibold transition hover:bg-blue-500"
+        className="rounded-2xl bg-blue-600 px-8 py-4 font-semibold hover:bg-blue-500"
       >
-        <Search size={20} />
         Analyze
       </button>
 
