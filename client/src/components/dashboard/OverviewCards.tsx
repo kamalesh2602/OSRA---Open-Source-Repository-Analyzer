@@ -1,35 +1,40 @@
 interface Props {
-  repository: any;
+    repository: any;
 }
 
 function Card({ title, value }: { title: string; value: any }) {
-  return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-      <h3 className="text-slate-400">{title}</h3>
+    return (
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <h3 className="text-slate-400">{title}</h3>
 
-      <p className="mt-3 text-3xl font-bold">
-        {value}
-      </p>
-    </div>
-  );
+            <p className="mt-3 text-3xl font-bold">
+                {value}
+            </p>
+        </div>
+    );
 }
 
 export default function OverviewCards({ repository }: Props) {
-  return (
-    <div className="mx-auto mb-20 grid max-w-7xl grid-cols-1 gap-6 px-8 md:grid-cols-2 lg:grid-cols-3">
+    return (
+        <div className="mx-auto mb-20 grid max-w-7xl grid-cols-1 gap-6 px-8 md:grid-cols-2 lg:grid-cols-3">
 
-      <Card title="⭐ Stars" value={repository.stars} />
+            <Card title="Repository Profile" value={repository.profile} />
 
-      <Card title="🍴 Forks" value={repository.forks} />
+            <Card title="Cluster" value={repository.cluster} />
 
-      <Card title="🐞 Open Issues" value={repository.open_issues} />
+            <Card title="Insight" value={repository.insight} />
+            <Card title="⭐ Stars" value={repository.stars} />
 
-      <Card title="💻 Language" value={repository.language} />
+            <Card title="🍴 Forks" value={repository.forks} />
 
-      <Card title="👀 Watchers" value={repository.watchers} />
+            <Card title="🐞 Open Issues" value={repository.open_issues} />
 
-      <Card title="📦 Size" value={repository.size} />
+            <Card title="💻 Language" value={repository.language} />
 
-    </div>
-  );
+            <Card title="👀 Watchers" value={repository.watchers} />
+
+            <Card title="📦 Size" value={repository.size} />
+
+        </div>
+    );
 }

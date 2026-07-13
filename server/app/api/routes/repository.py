@@ -7,6 +7,8 @@ from app.schemas.repository import (
 
 from app.services.github import GitHubService
 from app.utils.parser import parse_repo_url
+from ml.scripts.predict import predict
+
 
 router = APIRouter(
     prefix="/repository",
@@ -25,19 +27,25 @@ async def analyze_repository(data: RepositoryRequest):
         owner, repo = parse_repo_url(data.url)
         repository = await github.get_repository(owner, repo)
 
-        return RepositoryResponse(
-            owner=repository["owner"]["login"],
-            name=repository["name"],
-            full_name=repository["full_name"],
-            description=repository["description"],
-            language=repository["language"],
-            stars=repository["stargazers_count"],
-            forks=repository["forks_count"],
-            watchers=repository["watchers_count"],
-            open_issues=repository["open_issues_count"],
-            size=repository["size"],
-            default_branch=repository["default_branch"],
-        )
+        ml_result = predict(owner, repo)
+
+        return {
+            "owner": repository["owner"]["login"],
+            "name": repository["name"],
+            "full_name": repository["full_name"],
+            "description": repository["description"],
+            "language": repository["language"],
+            "stars": repository["stargazers_count"],
+            "forks": repository["forks_count"],
+            "watchers": repository["watchers_count"],
+            "open_issues": repository["open_issues_count"],
+            "size": repository["size"],
+            "default_branch": repository["default_branch"],
+
+            "cluster": ml_result["cluster"],
+            "profile": ml_result["profile"],
+            "insight": ml_result["insight"],
+        }
 
     except Exception as e:
         print(e)

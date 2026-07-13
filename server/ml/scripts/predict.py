@@ -115,17 +115,15 @@ def predict(owner: str, repo: str):
     # -----------------------------
     X = SCALER.transform(df)
 
-    cluster = MODEL.predict(X)[0]
+    cluster = int(MODEL.predict(X)[0])
 
     info = CLUSTER_METADATA[str(cluster)]
 
-    print("\n==============================")
-    print(f"Repository : {owner}/{repo}")
-    print("==============================")
-    print(f"Cluster : {cluster}")
-    print(f"Name    : {info['name']}")
-    print()
-    print(info["insight"])
+    return {
+        "cluster": cluster,
+        "profile": info["name"],
+        "insight": info["insight"],
+    }
 
 
 if __name__ == "__main__":
