@@ -68,8 +68,8 @@ for k, score in zip(K, silhouette_scores):
 # -----------------------------
 # Select Best K
 # -----------------------------
-best_k = K[silhouette_scores.index(max(silhouette_scores))]
-
+# best_k = K[silhouette_scores.index(max(silhouette_scores))]
+best_k = 5
 print(f"\nBest K = {best_k}")
 
 # -----------------------------

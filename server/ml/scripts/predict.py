@@ -28,6 +28,9 @@ ENCODER = joblib.load(ARTIFACTS / "encoder.pkl")
 FEATURE_COLUMNS = joblib.load(
     ARTIFACTS / "feature_columns.pkl"
 )
+PCA = joblib.load(
+    ARTIFACTS / "pca.pkl"
+)
 
 with open(
     ARTIFACTS / "cluster_metadata.json",
@@ -36,13 +39,25 @@ with open(
     CLUSTER_METADATA = json.load(f)
 
 
+TOP_LANGUAGES = [
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "Java",
+    "C",
+    "C++",
+    "Go",
+    "Rust",
+]
+
+
 def predict(owner: str, repo: str):
 
     repository = get_repository(owner, repo)
 
     if repository is None:
         print("Repository not found.")
-        return
+        return None
 
     contributors = get_contributors(owner, repo)
     releases = get_releases(owner, repo)
@@ -55,9 +70,17 @@ def predict(owner: str, repo: str):
         releases,
         branches,
         readme,
+        "Prediction",   # Dummy category
     )
 
     df = pd.DataFrame([metadata])
+
+    # -----------------------------
+    # Reduce Languages
+    # -----------------------------
+    df["language"] = df["language"].apply(
+        lambda x: x if x in TOP_LANGUAGES else "Other"
+    )
 
     # -----------------------------
     # Feature Engineering
@@ -65,16 +88,16 @@ def predict(owner: str, repo: str):
     df = engineer_features(df)
 
     # -----------------------------
-    # Encode
+    # Encode Language
     # -----------------------------
     encoded = ENCODER.transform(
-        df[["language", "license"]]
+        df[["language"]]
     )
 
     encoded_df = pd.DataFrame(
         encoded,
         columns=ENCODER.get_feature_names_out(
-            ["language", "license"]
+            ["language"]
         ),
     )
 
@@ -83,6 +106,7 @@ def predict(owner: str, repo: str):
     # -----------------------------
     df = df.drop(
         columns=[
+            "category",
             "owner",
             "repository",
             "language",
@@ -94,6 +118,9 @@ def predict(owner: str, repo: str):
         ]
     )
 
+    # -----------------------------
+    # Merge encoded features
+    # -----------------------------
     df = pd.concat(
         [
             df.reset_index(drop=True),
@@ -115,23 +142,32 @@ def predict(owner: str, repo: str):
     # -----------------------------
     X = SCALER.transform(df)
 
+    X = PCA.transform(X)
+
     cluster = int(MODEL.predict(X)[0])
 
     info = CLUSTER_METADATA[str(cluster)]
 
-    return {
+    result = {
         "cluster": cluster,
         "profile": info["name"],
         "insight": info["insight"],
     }
 
+    return result
+
 
 if __name__ == "__main__":
 
-    url = input("GitHub URL : ").strip()
-
-    url = url.rstrip("/")
+    url = input("GitHub URL : ").strip().rstrip("/")
 
     owner, repo = url.split("/")[-2:]
 
-    predict(owner, repo)
+    result = predict(owner, repo)
+
+    if result:
+        print("\n==============================")
+        print(f"Cluster : {result['cluster']}")
+        print(f"Profile : {result['profile']}")
+        print(f"Insight : {result['insight']}")
+        print("==============================")

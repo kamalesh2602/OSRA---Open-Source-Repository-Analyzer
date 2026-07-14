@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from ml.utils.feature_transformer import engineer_features
+from sklearn.decomposition import PCA
 
 # ---------------------------------------------------
 # Paths
@@ -19,6 +20,7 @@ ARTIFACTS_DIR = BASE_DIR / "artifacts"
 SCALER_FILE = ARTIFACTS_DIR / "scaler.pkl"
 ENCODER_FILE = ARTIFACTS_DIR / "encoder.pkl"
 FEATURE_COLUMNS_FILE = ARTIFACTS_DIR / "feature_columns.pkl"
+PCA_FILE = ARTIFACTS_DIR / "pca.pkl"
 
 
 def feature_engineering():
@@ -106,17 +108,39 @@ def feature_engineering():
     print(f"\nFeature Count : {len(feature_columns)}")
 
     # ---------------------------------------------------
-    # Scale Features
-    # ---------------------------------------------------
+# Scale Features
+# ---------------------------------------------------
     scaler = StandardScaler()
 
     scaled = scaler.fit_transform(df)
 
-    feature_df = pd.DataFrame(
-        scaled,
-        columns=feature_columns,
+# ---------------------------------------------------
+# PCA
+# ---------------------------------------------------
+    pca = PCA(
+        n_components=0.95,
+        random_state=42,
     )
 
+    pca_features = pca.fit_transform(scaled)
+
+    print(
+        f"PCA Components : {pca.n_components_}"
+    )
+
+    feature_df = pd.DataFrame(
+        pca_features,
+        columns=[
+            f"PC{i+1}"
+            for i in range(pca.n_components_)
+        ],
+    )
+
+    print(
+    f"Explained Variance : "
+    f"{pca.explained_variance_ratio_.sum():.4f}"
+)
+    
     # ---------------------------------------------------
     # Save Artifacts
     # ---------------------------------------------------
@@ -134,6 +158,14 @@ def feature_engineering():
         encoder,
         ENCODER_FILE,
     )
+    joblib.dump(
+    pca,
+    PCA_FILE,
+)
+    print(
+    f"Explained Variance : "
+    f"{pca.explained_variance_ratio_.sum():.4f}"
+)
 
     joblib.dump(
         feature_columns,
