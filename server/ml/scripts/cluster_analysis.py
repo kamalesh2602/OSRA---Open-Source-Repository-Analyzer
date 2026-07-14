@@ -25,7 +25,7 @@ cluster_df = pd.read_csv(CLUSTER_DATASET)
 raw_df["cluster"] = cluster_df["cluster"]
 
 # ---------------------------------------------------
-# Numeric Columns
+# Numeric Summary
 # ---------------------------------------------------
 numeric_columns = [
     "stars",
@@ -49,81 +49,120 @@ summary = (
 summary["repositories"] = raw_df.groupby("cluster").size()
 
 # ---------------------------------------------------
-# Identify Cluster Characteristics
+# Cluster Naming
 # ---------------------------------------------------
-popular_cluster = summary["stars"].idxmax()
-active_cluster = summary["contributors"].idxmax()
-stable_cluster = summary["releases"].idxmax()
-lightweight_cluster = summary["size"].idxmin()
-emerging_cluster = summary["stars"].idxmin()
+metadata = {}
 
 summary["name"] = ""
 summary["insight"] = ""
 
-metadata = {}
-
 for cluster in summary.index:
 
-    tags = []
+    stars = summary.loc[cluster, "stars"]
+    contributors = summary.loc[cluster, "contributors"]
+    releases = summary.loc[cluster, "releases"]
+    size = summary.loc[cluster, "size"]
+    repositories = int(summary.loc[cluster, "repositories"])
 
-    if cluster == popular_cluster:
-        tags.append("Popular")
+    # -----------------------------------------------
+    # Cluster Name
+    # -----------------------------------------------
+    if stars >= 200000:
+        name = "Enterprise Scale Projects"
 
-    if cluster == active_cluster:
-        tags.append("Actively Maintained")
+        insight = (
+            "These repositories represent globally adopted open-source "
+            "projects with massive communities, extensive ecosystem support, "
+            "and widespread production usage."
+        )
 
-    if cluster == stable_cluster:
-        tags.append("Mature")
+    elif stars >= 100000 and releases >= 15:
+        name = "Highly Active Ecosystem"
 
-    if cluster == lightweight_cluster:
-        tags.append("Lightweight")
+        insight = (
+            "These repositories combine high popularity with frequent "
+            "releases and active maintenance, indicating a healthy and "
+            "continuously evolving project."
+        )
 
-    if cluster == emerging_cluster:
-        tags.append("Emerging")
+    elif stars >= 10000:
+        name = "Established Open Source"
 
-    if not tags:
-        tags.append("General Purpose")
+        insight = (
+            "These repositories have established communities, consistent "
+            "development activity, and are commonly used in real-world "
+            "applications."
+        )
 
-    cluster_name = " | ".join(tags)
+    elif stars >= 500:
+        name = "Growing Community Projects"
 
-    insight = (
-        f"This cluster represents {cluster_name.lower()} repositories "
-        f"with an average of "
-        f"{int(summary.loc[cluster, 'stars'])} stars, "
-        f"{int(summary.loc[cluster, 'contributors'])} contributors, "
-        f"and {summary.loc[cluster, 'repositories']} repositories."
-    )
+        insight = (
+            "These repositories are actively growing with moderate community "
+            "adoption and regular development."
+        )
 
-    summary.loc[cluster, "name"] = cluster_name
+    else:
+        name = "Small & Experimental Projects"
+
+        insight = (
+            "These repositories are typically personal projects, prototypes, "
+            "or newly created repositories with limited community activity."
+        )
+
+    summary.loc[cluster, "name"] = name
     summary.loc[cluster, "insight"] = insight
 
     metadata[int(cluster)] = {
         "cluster": int(cluster),
-        "name": cluster_name,
+        "name": name,
         "insight": insight,
-        "repositories": int(summary.loc[cluster, "repositories"]),
-        "average_stars": float(summary.loc[cluster, "stars"]),
+        "repositories": repositories,
+        "average_stars": float(stars),
         "average_forks": float(summary.loc[cluster, "forks"]),
         "average_watchers": float(summary.loc[cluster, "watchers"]),
-        "average_contributors": float(summary.loc[cluster, "contributors"]),
-        "average_releases": float(summary.loc[cluster, "releases"]),
-        "average_size": float(summary.loc[cluster, "size"]),
+        "average_contributors": float(contributors),
+        "average_releases": float(releases),
+        "average_size": float(size),
     }
 
 # ---------------------------------------------------
 # Save
 # ---------------------------------------------------
-ARTIFACTS.mkdir(parents=True, exist_ok=True)
+ARTIFACTS.mkdir(
+    parents=True,
+    exist_ok=True,
+)
 
-summary.to_csv(SUMMARY_FILE)
+summary.to_csv(
+    SUMMARY_FILE,
+)
 
-with open(JSON_FILE, "w", encoding="utf-8") as file:
-    json.dump(metadata, file, indent=4)
+with open(
+    JSON_FILE,
+    "w",
+    encoding="utf-8",
+) as f:
+    json.dump(
+        metadata,
+        f,
+        indent=4,
+    )
 
 print("\nCluster Analysis Completed")
 print("=" * 60)
 
-print(summary[["name", "repositories"]])
+print(
+    summary[
+        [
+            "name",
+            "repositories",
+            "stars",
+            "contributors",
+            "releases",
+        ]
+    ]
+)
 
 print(f"\nCSV  : {SUMMARY_FILE}")
 print(f"JSON : {JSON_FILE}")

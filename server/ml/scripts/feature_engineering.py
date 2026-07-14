@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from ml.utils.feature_transformer import engineer_features
+from sklearn.decomposition import PCA
 
 # ---------------------------------------------------
 # Paths
@@ -19,6 +20,7 @@ ARTIFACTS_DIR = BASE_DIR / "artifacts"
 SCALER_FILE = ARTIFACTS_DIR / "scaler.pkl"
 ENCODER_FILE = ARTIFACTS_DIR / "encoder.pkl"
 FEATURE_COLUMNS_FILE = ARTIFACTS_DIR / "feature_columns.pkl"
+PCA_FILE = ARTIFACTS_DIR / "pca.pkl"
 
 
 def feature_engineering():
@@ -29,12 +31,30 @@ def feature_engineering():
     df = pd.read_csv(INPUT_FILE)
 
     # ---------------------------------------------------
+    # Reduce Language Categories
+    # ---------------------------------------------------
+    top_languages = [
+        "Python",
+        "JavaScript",
+        "TypeScript",
+        "Java",
+        "C",
+        "C++",
+        "Go",
+        "Rust",
+    ]
+
+    df["language"] = df["language"].apply(
+        lambda x: x if x in top_languages else "Other"
+    )
+
+    # ---------------------------------------------------
     # Apply Feature Engineering
     # ---------------------------------------------------
     df = engineer_features(df)
 
     # ---------------------------------------------------
-    # One-Hot Encode Categorical Features
+    # Encode ONLY Language
     # ---------------------------------------------------
     encoder = OneHotEncoder(
         sparse_output=False,
@@ -42,23 +62,24 @@ def feature_engineering():
     )
 
     encoded = encoder.fit_transform(
-        df[["language", "license"]]
+        df[["language"]]
     )
 
     encoded_df = pd.DataFrame(
         encoded,
         columns=encoder.get_feature_names_out(
-            ["language", "license"]
+            ["language"]
         ),
     )
 
     # ---------------------------------------------------
-    # Remove Unused Columns
+    # Drop Unused Columns
     # ---------------------------------------------------
     df = df.drop(
         columns=[
             "owner",
             "repository",
+            "category",
             "language",
             "license",
             "created_at",
@@ -80,22 +101,46 @@ def feature_engineering():
     )
 
     # ---------------------------------------------------
-    # Save Feature Column Order
+    # Save Feature Columns
     # ---------------------------------------------------
     feature_columns = list(df.columns)
 
+    print(f"\nFeature Count : {len(feature_columns)}")
+
     # ---------------------------------------------------
-    # Scale Features
-    # ---------------------------------------------------
+# Scale Features
+# ---------------------------------------------------
     scaler = StandardScaler()
 
-    scaled_features = scaler.fit_transform(df)
+    scaled = scaler.fit_transform(df)
 
-    feature_df = pd.DataFrame(
-        scaled_features,
-        columns=feature_columns,
+# ---------------------------------------------------
+# PCA
+# ---------------------------------------------------
+    pca = PCA(
+        n_components=0.95,
+        random_state=42,
     )
 
+    pca_features = pca.fit_transform(scaled)
+
+    print(
+        f"PCA Components : {pca.n_components_}"
+    )
+
+    feature_df = pd.DataFrame(
+        pca_features,
+        columns=[
+            f"PC{i+1}"
+            for i in range(pca.n_components_)
+        ],
+    )
+
+    print(
+    f"Explained Variance : "
+    f"{pca.explained_variance_ratio_.sum():.4f}"
+)
+    
     # ---------------------------------------------------
     # Save Artifacts
     # ---------------------------------------------------
@@ -113,6 +158,14 @@ def feature_engineering():
         encoder,
         ENCODER_FILE,
     )
+    joblib.dump(
+    pca,
+    PCA_FILE,
+)
+    print(
+    f"Explained Variance : "
+    f"{pca.explained_variance_ratio_.sum():.4f}"
+)
 
     joblib.dump(
         feature_columns,
@@ -140,7 +193,7 @@ def feature_engineering():
     print(f"Repositories : {feature_df.shape[0]}")
     print(f"Features     : {feature_df.shape[1]}")
     print(f"\nDataset saved to:\n{OUTPUT_FILE}")
-    print(f"\nArtifacts saved:")
+    print("\nArtifacts saved:")
     print(f"  • {SCALER_FILE.name}")
     print(f"  • {ENCODER_FILE.name}")
     print(f"  • {FEATURE_COLUMNS_FILE.name}")
