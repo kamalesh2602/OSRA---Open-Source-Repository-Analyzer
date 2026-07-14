@@ -172,7 +172,7 @@ OSRA
 ## Clone Repository
 
 ```bash
-git clone https://github.com/<your-username>/OSRA.git
+git clone https://github.com/kamalesh2602/OSRA.git
 cd OSRA
 ```
 
