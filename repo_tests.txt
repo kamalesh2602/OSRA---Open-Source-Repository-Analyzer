@@ -1,0 +1,11 @@
+https://github.com/microsoft/vscode
+https://github.com/tensorflow/tensorflow
+https://github.com/redis/redis
+https://github.com/Textualize/rich
+https://github.com/sharkdp/bat
+https://github.com/BurntSushi/ripgrep
+https://github.com/facebook/react
+https://github.com/pallets/flask
+https://github.com/langchain-ai/langchain
+https://github.com/atom/atom
+https://github.com/psf/black
