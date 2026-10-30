@@ -1,3 +1,4 @@
+
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -40,8 +41,63 @@ export default function RepositoryChart({ repository }: Props) {
                     repository.watchers,
                     repository.open_issues,
                 ],
+
+                backgroundColor: [
+                    "rgba(56, 189, 248, 0.75)",
+                    "rgba(167, 139, 250, 0.75)",
+                    "rgba(52, 211, 153, 0.75)",
+                    "rgba(251, 146, 60, 0.75)",
+                ],
+
+                borderColor: [
+                    "#38bdf8",
+                    "#a78bfa",
+                    "#34d399",
+                    "#fb923c",
+                ],
+
+                borderWidth: 1,
+                borderRadius: 8,
             },
         ],
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: true,
+
+        plugins: {
+            legend: {
+                labels: {
+                    color: "#e2e8f0",
+                },
+            },
+
+            tooltip: {
+                enabled: true,
+            },
+        },
+
+        scales: {
+            x: {
+                ticks: {
+                    color: "#cbd5e1",
+                },
+                grid: {
+                    color: "rgba(255,255,255,0.08)",
+                },
+            },
+
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: "#cbd5e1",
+                },
+                grid: {
+                    color: "rgba(255,255,255,0.08)",
+                },
+            },
+        },
     };
 
     return (
@@ -50,7 +106,7 @@ export default function RepositoryChart({ repository }: Props) {
                 Repository Metrics
             </h2>
 
-            <Bar data={data} />
+            <Bar data={data} options={options} />
         </div>
     );
 }
